@@ -3,24 +3,31 @@ from pelican import signals
 
 def initialize(pelican):
     if pelican:
-        pelican.settings.setdefault('RENDER_MULTIPLE_FILES', 'RENDER_MULTIPLE')
+        pelican.settings.setdefault('MULTIPLE_FILES_RENDER_META', 'RENDER_MULTIPLE')
+        pelican.settings.setdefault('MULTIPLE_FILES_OUTPUT_LIST', 'content_list')
 
 
 def multiple_files(generator):
-    file_marker = generator.settings['RENDER_MULTIPLE_FILES']
+    file_marker = generator.settings['MULTIPLE_FILES_RENDER_META']
+    list_name = generator.settings['MULTIPLE_FILES_OUTPUT_LIST']
+    # list of articles which have the marker
     article_multi = []
+    # index of articles in generator
     article_mulit_index = []
+    # extract articles which have the marker set and get their index in the list
     for idx, article in enumerate(generator.articles):
-        if hasattr(article, 'multi'):
+        if hasattr(article, file_marker):
             article_multi.append(article)
             article_mulit_index.append(idx)
 
-    #delete items from the generator which have multi set
+    # delete articles from generator
     for index in reversed(article_mulit_index):
         del(generator.articles[index])
 
+    # get the save_as metadata
     save_url_list = extract_save_url(article_multi)
 
+    # list of articles with content extracted from multiple files
     article_list = []
     for link in save_url_list:
         link_index = 0
@@ -30,11 +37,12 @@ def multiple_files(generator):
                 temp_content = article.content
                 if index == 1:
                     article_list.append(article)
-                    article_list[link_index].content_list = []
+                    article_list[link_index].list_name = []
                     index += 1
-                article_list[link_index].content_list.append(temp_content)
+                article_list[link_index].list_name.append(temp_content)
         link_index += 1
 
+    # append the generated list to generator object
     for article in article_list:
         generator.articles.append(article)
 
