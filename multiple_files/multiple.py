@@ -1,20 +1,19 @@
 from pelican import signals
 
-def initialized(pelican):
-    print("Plugin initialized")
+
+def initialize(pelican):
+    if pelican:
+        pelican.settings.setdefault('RENDER_MULTIPLE_FILES', 'RENDER_MULTIPLE')
 
 
-#def metadata_check(instance):
-def metadata_check(generator):
-    print("Metadata function running")
+def multiple_files(generator):
+    file_marker = generator.settings['RENDER_MULTIPLE_FILES']
     article_multi = []
     article_mulit_index = []
     for idx, article in enumerate(generator.articles):
         if hasattr(article, 'multi'):
             article_multi.append(article)
             article_mulit_index.append(idx)
-        else:
-            print("Absent")
 
     #delete items from the generator which have multi set
     for index in reversed(article_mulit_index):
@@ -39,8 +38,6 @@ def metadata_check(generator):
     for article in article_list:
         generator.articles.append(article)
 
-    print("Finished running")
-
 
 def extract_save_url(article_list):
     save_link_list = []
@@ -51,5 +48,5 @@ def extract_save_url(article_list):
 
 
 def register():
-    signals.initialized.connect(initialized)
-    signals.article_generator_finalized.connect(metadata_check)
+    signals.initialized.connect(initialize)
+    signals.article_generator_finalized.connect(multiple_files)
