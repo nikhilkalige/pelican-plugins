@@ -3,7 +3,7 @@ from pelican import signals
 
 def initialize(pelican):
     if pelican:
-        pelican.settings.setdefault('MULTIPLE_FILES_RENDER_META', 'RENDER_MULTIPLE')
+        pelican.settings.setdefault('MULTIPLE_FILES_RENDER_META', 'render_multiple')
         pelican.settings.setdefault('MULTIPLE_FILES_OUTPUT_LIST', 'content_list')
 
 
@@ -37,9 +37,10 @@ def multiple_files(generator):
                 temp_content = article.content
                 if index == 1:
                     article_list.append(article)
-                    article_list[link_index].list_name = []
+                    setattr(article_list[link_index], list_name, [])
                     index += 1
-                article_list[link_index].list_name.append(temp_content)
+                getattr(article_list[link_index], list_name).append(temp_content)
+
         link_index += 1
 
     # append the generated list to generator object
