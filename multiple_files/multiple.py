@@ -1,9 +1,11 @@
 from pelican import signals
 from pelican.utils import slugify
+from ._regenerate_context_helpers import regenerate_context_articles
 
 
 def multiple_articles(generator):
     multiple_files(generator, 'articles')
+    regenerate_context_articles(generator)
 
 
 def multiple_pages(generator):
