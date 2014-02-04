@@ -8,51 +8,59 @@ def initialize(pelican):
         pelican.settings.setdefault('MULTIPLE_FILES_OUTPUT_LIST', 'content_list')
 
 
-def multiple_files(generator):
+def multiple_articles(generator):
+    multiple_files(generator, 'articles')
+
+
+def multiple_pages(generator):
+    multiple_files(generator, 'pages')
+
+
+def multiple_files(generator, file_class):
     file_marker = generator.settings['MULTIPLE_FILES_RENDER_META']
     list_name = generator.settings['MULTIPLE_FILES_OUTPUT_LIST']
-    # list of articles which have the marker
-    article_multi = []
-    # index of articles in generator
-    article_mulit_index = []
-    # extract articles which have the marker set and get their index in the list
-    for idx, article in enumerate(generator.articles):
+    # list of files which have the marker
+    file_multi = []
+    # index of files in generator
+    file_mulit_index = []
+    # extract files which have the marker set and get their index in the list
+    for idx, article in enumerate(getattr(generator, file_class)):
         if hasattr(article, file_marker):
-            article_multi.append(article)
-            article_mulit_index.append(idx)
+            file_multi.append(article)
+            file_mulit_index.append(idx)
 
-    # delete articles from generator
-    for index in reversed(article_mulit_index):
-        del(generator.articles[index])
+    # delete files from generator
+    for index in reversed(file_mulit_index):
+        del(getattr(generator, file_class)[index])
 
     # get the save_as metadata
-    save_url_list = extract_save_url(article_multi)
+    save_url_list = extract_save_url(file_multi)
 
-    # list of articles with content extracted from multiple files
-    article_list = []
+    # list of files with content extracted from multiple files
+    file_list = []
     for link in save_url_list:
         link_index = 0
         index = 1
-        for article in article_multi:
+        for article in file_multi:
             if article.save_as == link:
                 temp_content = article.content
                 temp_title = slugify(article.title)
                 if index == 1:
-                    article_list.append(article)
-                    setattr(article_list[link_index], list_name, dict())
+                    file_list.append(article)
+                    setattr(file_list[link_index], list_name, dict())
                     index += 1
-                getattr(article_list[link_index], list_name)[temp_title] = temp_content
+                getattr(file_list[link_index], list_name)[temp_title] = temp_content
 
         link_index += 1
 
     # append the generated list to generator object
-    for article in article_list:
-        generator.articles.append(article)
+    for article in file_list:
+        getattr(generator, file_class).append(article)
 
 
-def extract_save_url(article_list):
+def extract_save_url(file_list):
     save_link_list = []
-    for article in article_list:
+    for article in file_list:
             if article.save_as not in save_link_list:
                 save_link_list.append(article.save_as)
     return save_link_list
@@ -60,4 +68,5 @@ def extract_save_url(article_list):
 
 def register():
     signals.initialized.connect(initialize)
-    signals.article_generator_finalized.connect(multiple_files)
+    signals.article_generator_finalized.connect(multiple_articles)
+    signals.page_generator_finalized.connect(multiple_pages)
