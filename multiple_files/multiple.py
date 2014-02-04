@@ -1,4 +1,5 @@
 from pelican import signals
+from pelican.utils import slugify
 
 
 def initialize(pelican):
@@ -35,11 +36,12 @@ def multiple_files(generator):
         for article in article_multi:
             if article.save_as == link:
                 temp_content = article.content
+                temp_title = slugify(article.title)
                 if index == 1:
                     article_list.append(article)
-                    setattr(article_list[link_index], list_name, [])
+                    setattr(article_list[link_index], list_name, dict())
                     index += 1
-                getattr(article_list[link_index], list_name).append(temp_content)
+                getattr(article_list[link_index], list_name)[temp_title] = temp_content
 
         link_index += 1
 
