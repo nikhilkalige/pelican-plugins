@@ -9,7 +9,7 @@ This plugins helps one push multiple articles to a single template
 Settings
 ---
     # This sets the metadata that the plugin looks for in the articles
-    MULTIPLE_FILES_RENDER_META: 'RENDER_MULTIPLE'
+    MULTIPLE_FILES_RENDER_META: 'render_multiple'
 
     # This sets the name of list offered in the template
     MULTIPLE_FILES_OUTPUT_LIST: 'content_list'
