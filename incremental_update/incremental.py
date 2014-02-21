@@ -18,6 +18,9 @@ def initialize(pelican):
         repo = git.Repo.init(".")
         logger.debug("IUP: Initialize new repository")
     create_ignore()
+    if not commits_present(repo):
+        # there are no commits, quit now
+        logger.warn("IUP: There are no commits, please add commit changes and run again")
 
 
 def create_ignore():
@@ -38,11 +41,16 @@ def create_ignore():
     ouput.close()
 
 
-def commit_changes():
+def commits_present(repo):
     """
         Commit changes in the directory
     """
-
+    # check if there are any commits
+    try:
+        repo.commit()
+    except ValueError:
+        return False
+    return True
 
 def register():
     signals.initialized.connect(initialize)
