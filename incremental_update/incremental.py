@@ -3,6 +3,7 @@ from pelican import signals
 from pelican.utils import slugify
 import logging
 import os
+import sys
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,16 @@ def initialize(pelican):
     create_ignore()
     if not commits_present(repo):
         # there are no commits, quit now
-        logger.warn("IUP: There are no commits, please add commit changes and run again")
+        logger.critical("IUP: There are no commits, please add commit changes and run again")
+        logger.critical("IUP: Exiting now")
+        sys.exit()
+    # get the current commit
+    current_commit = repo.commit
+    # get the last commit based on which the content was generated
+    # temporarily we will use hardcoded data
+    last_commit = "592edb8c18de4c8c791ae548021b2321eff4dd5c"
+
+
 
 
 def create_ignore():
@@ -51,6 +61,12 @@ def commits_present(repo):
     except ValueError:
         return False
     return True
+
+
+def get_changes(repo, current_commit, last_commit):
+    """
+        Find files that have changed since last time content was generated
+    """
 
 def register():
     signals.initialized.connect(initialize)
