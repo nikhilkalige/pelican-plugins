@@ -8,8 +8,11 @@ import sys
 
 logger = logging.getLogger(__name__)
 
+_incremental_update = False
+
 
 def initialize(pelican):
+    global _incremental_update
     logger.debug("IUP: Begin")
     # check if git is initialized
     try:
@@ -18,22 +21,43 @@ def initialize(pelican):
         # repo is not initialized, initialize now
         repo = git.Repo.init(".")
         logger.debug("IUP: Initialize new repository")
-    create_ignore()
+    create_gitignore()
     if not commits_present(repo):
         # there are no commits, quit now
         logger.critical("IUP: There are no commits, please add commit changes and run again")
         logger.critical("IUP: Exiting now")
         sys.exit()
     # get the current commit
-    current_commit = repo.commit
+    current_commit = repo.commit()
     # get the last commit based on which the content was generated
     # temporarily we will use hardcoded data
-    last_commit = "592edb8c18de4c8c791ae548021b2321eff4dd5c"
+    last_commit = "f9d8519c10591a7aeff588b95ae42ee3b7ba9ab3"
+    # get the diff between the commits
+    diff = current_commit.diff(last_commit)
+    # check if there are any changes in config files
+    for x in diff:
+        if x.a_blob.name not in ["pelicanconf.py", "publishconf.py"]:
+            _incremental_update = True
+
+    if _incremental_update is False:
+        logger.debug("IUP: Config files have changed, regenerate whole content")
 
 
+def aritcles_update(generator):
+    global _incremental_update
+    # skip if config has been changed or if output dir has been cleaned
+    if _incremental_update is True:
+        logger.debug("IUP: Checking articles for changes")
 
 
-def create_ignore():
+def pages_update(generator):
+    global _incremental_update
+    # skip if config has been changed or if output dir has been cleaned
+    if _incremental_update is True:
+        logger.debug("IUP: Checking pages for changes")
+
+
+def create_gitignore():
     """
         Create .gitignore file
     """
@@ -68,5 +92,8 @@ def get_changes(repo, current_commit, last_commit):
         Find files that have changed since last time content was generated
     """
 
+
 def register():
     signals.initialized.connect(initialize)
+    signals.article_generator_finalized.connect(aritcles_update)
+    signals.page_generator_finalized.connect(pages_update)
