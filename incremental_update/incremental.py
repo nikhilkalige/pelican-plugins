@@ -9,9 +9,8 @@ logger = logging.getLogger(__name__)
 
 _incremental_update = True
 
-
 def initialize(pelican):
-    global _incremental_update
+    global _incremental_update, _diff
     logger.debug("IUP: Begin")
 
     # check whether output folder has generated content
@@ -26,7 +25,7 @@ def initialize(pelican):
     if _incremental_update is True:
         # check if git is initialized
         try:
-            repo = git.Repo("")
+            repo = git.Repo("/home/nikhil/workspace/web_development/python/pelican/incremental-test")
         except git.InvalidGitRepositoryError:
             # repo is not initialized, initialize now
             repo = git.Repo.init(".")
@@ -46,13 +45,13 @@ def initialize(pelican):
         last_commit = "f9d8519c10591a7aeff588b95ae42ee3b7ba9ab3"
         # office pc
         last_commit = "09e8fe4853862394a13be5a82e9944343e5cd93b"  # 3rd commit
-        last_commit = "6d39c31f03b8995ade57fe9d9d5474ce6d3f5d84"  # 1st commit
         last_commit = "f42e9e4a0cefb6b7c2e6c4a4a7bfad93cd435adc"  # 2nd commit
+        last_commit = "6d39c31f03b8995ade57fe9d9d5474ce6d3f5d84"  # 1st commit
         # get the diff between the commits
-        diff = current_commit.diff(last_commit)
+        _diff = current_commit.diff(last_commit)
         # check if there are any changes in config files
-        if diff:
-            for x in diff:
+        if _diff:
+            for x in _diff:
                 if x.a_blob.name in ["pelicanconf.py", "publishconf.py"]:
                     # config files have changed, regenerate content
                     _incremental_update = False
@@ -66,14 +65,15 @@ def initialize(pelican):
 
 
 def aritcles_update(generator):
-    global _incremental_update
+    global _incremental_update, _diff
+    print("UPDATE")
     # skip if config has been changed or if output dir has been cleaned
     if _incremental_update is True:
         logger.debug("IUP: Begin working on articles")
 
 
 def pages_update(generator):
-    global _incremental_update
+    global _incremental_update, _diff
     # skip if config has been changed or if output dir has been cleaned
     if _incremental_update is True:
         logger.debug("IUP: Begin working on pages")
@@ -115,7 +115,22 @@ def get_changes(repo, current_commit, last_commit):
     """
 
 
+def contex(a, metadata):
+    print("PREREAD")
+
+
+def pre(a):
+    print("CIONTEXT")
+
+
+def initt(a):
+    print("INIT")
+
+
 def register():
     signals.initialized.connect(initialize)
     signals.article_generator_finalized.connect(aritcles_update)
     signals.page_generator_finalized.connect(pages_update)
+    signals.article_generator_preread.connect(pre)
+    signals.article_generator_context.connect(contex)
+    signals.article_generator_init.connect(initt)
