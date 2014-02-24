@@ -29,16 +29,25 @@ def initialize(pelican):
         sys.exit()
     # get the current commit
     current_commit = repo.commit()
+    logger.debug(current_commit)
     # get the last commit based on which the content was generated
     # temporarily we will use hardcoded data
+    last_commit = "18269fb124c1f9e96ec1f6246ee184f2e195886c"
     last_commit = "f9d8519c10591a7aeff588b95ae42ee3b7ba9ab3"
     # get the diff between the commits
     diff = current_commit.diff(last_commit)
     # check if there are any changes in config files
-    for x in diff:
-        if x.a_blob.name not in ["pelicanconf.py", "publishconf.py"]:
-            _incremental_update = True
-
+    if diff:
+        for x in diff:
+            print ("IUP: Inside")
+            if x.a_blob.name not in ["pelicanconf.py", "publishconf.py"]:
+                # no change in config files, use IUP
+                print ("True")
+                _incremental_update = True
+    else:
+        _incremental_update = False
+    print("IUP:")
+    print(_incremental_update)
     if _incremental_update is False:
         logger.debug("IUP: Config files have changed, regenerate whole content")
 
