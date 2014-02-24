@@ -8,7 +8,7 @@ import sys
 
 logger = logging.getLogger(__name__)
 
-_incremental_update = False
+_incremental_update = True
 
 
 def initialize(pelican):
@@ -29,25 +29,26 @@ def initialize(pelican):
         sys.exit()
     # get the current commit
     current_commit = repo.commit()
-    logger.debug(current_commit)
     # get the last commit based on which the content was generated
     # temporarily we will use hardcoded data
     last_commit = "18269fb124c1f9e96ec1f6246ee184f2e195886c"
     last_commit = "f9d8519c10591a7aeff588b95ae42ee3b7ba9ab3"
+    # office pc
+    last_commit = "09e8fe4853862394a13be5a82e9944343e5cd93b"  # 3rd commit
+    last_commit = "f42e9e4a0cefb6b7c2e6c4a4a7bfad93cd435adc"  # 2nd commit
+    last_commit = "6d39c31f03b8995ade57fe9d9d5474ce6d3f5d84"  # 1st commit
     # get the diff between the commits
     diff = current_commit.diff(last_commit)
     # check if there are any changes in config files
     if diff:
         for x in diff:
-            print ("IUP: Inside")
-            if x.a_blob.name not in ["pelicanconf.py", "publishconf.py"]:
-                # no change in config files, use IUP
-                print ("True")
-                _incremental_update = True
+            if x.a_blob.name in ["pelicanconf.py", "publishconf.py"]:
+                # config files have changed, regenerate content
+                _incremental_update = False
+                break
     else:
-        _incremental_update = False
-    print("IUP:")
-    print(_incremental_update)
+        # there are no changes between commits, time to exit pelican
+        logger.debug("IUP: There are no changes, exiting pelican")
     if _incremental_update is False:
         logger.debug("IUP: Config files have changed, regenerate whole content")
 
