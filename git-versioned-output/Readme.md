@@ -8,8 +8,6 @@ This plugin generates output for version controlled pelican directory. It genera
 
 Settings
 ---
-    # this sets the name for directory which holds all plugin generated content
-    GIT_VERSIONED_OUTPUT_LOCATION = version
     
     # this sets the directory name pattern for tags
     # it should contain {tag} inorder to be considered a valid value

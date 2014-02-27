@@ -17,6 +17,7 @@ def initialize(pelican):
     logger.debug("Begin")
     #get current working directory
     output_path_name = pelican.settings.get("GIT_VERSIONED_OUTPUT_TAG", "v-{tag}")
+    output_location_name = pelican.settings.get("GIT_VERSIONED_OUTPUT_LOCATION", "version")
     (working_path, content) = os.path.split(pelican.path)
     # check if git is initialized
     try:
@@ -39,13 +40,13 @@ def initialize(pelican):
             return
 
         output_path_name = output_path_name.replace("{tag}", tags_list[-1].name)
-        output_path = os.path.join(pelican.output_path, output_path_name)
+        output_path = os.path.join(working_path, output_location_name, output_path_name)
         if os.path.isdir(output_path) and os.listdir(output_path):
             logger.warning("Output for tag %s has already been generated, quiting pelican", tags_list[-1].name)
             sys.exit(0)
         pelican.output_path = output_path
         pelican.settings["OUTPUT_PATH"] = output_path
-        logger.debug("Output will generated at %s", output_path)
+        logger.debug("Output will generated at asdfasdfasdf%s", output_path)
     else:
         logger.warning("Repo is dirty or there are untracked files, output will be generated as usual")
 
