@@ -40,6 +40,9 @@ def initialize(pelican):
 
         output_path_name = output_path_name.replace("{tag}", tags_list[-1].name)
         output_path = os.path.join(pelican.output_path, output_path_name)
+        if os.path.isdir(output_path) and os.listdir(output_path):
+            logger.warning("Output for tag %s has already been generated, quiting pelican", tags_list[-1].name)
+            sys.exit(0)
         pelican.output_path = output_path
         pelican.settings["OUTPUT_PATH"] = output_path
         logger.debug("Output will generated at %s", output_path)
