@@ -26,12 +26,7 @@ def initialize(pelican):
         repo = git.Repo.init(working_path)
         logger.debug("Initialized new repository")
     create_gitignore()
-    if not commits_present(repo):
-        # there are no commits, quit now
-        logger.critical("There are no commits, please add commit changes and run again")
-        logger.critical("Exiting now")
-        sys.exit()
-    # get the current commit
+
     # if working directory is dirty ... quit plugin
     if not repo.is_dirty() and not repo.untracked_files:
         tags_list = repo.tags
@@ -68,18 +63,6 @@ def create_gitignore():
 
     logger.debug("Updated .gitignore")
     ouput.close()
-
-
-def commits_present(repo):
-    """
-        Commit changes in the directory
-    """
-    # check if there are any commits
-    try:
-        repo.commit()
-    except ValueError:
-        return False
-    return True
 
 
 def register():
