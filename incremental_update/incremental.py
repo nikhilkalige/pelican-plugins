@@ -6,36 +6,50 @@ import sys
 
 
 logger = logging.getLogger(__name__)
+formatter = logging.Formatter('%(levelname)s: git-versioned-output: %(message)s')
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 
 def initialize(pelican):
-    logger.debug("IUP: Begin")
-
+    logger.debug("Begin")
+    #get current working directory
+    output_path_name = pelican.settings.get("GIT_VERSIONED_OUTPUT_TAG", "v-{tag}")
+    (working_path, content) = os.path.split(pelican.path)
     # check if git is initialized
     try:
-        repo = git.Repo("/home/lonewolf/workspace/web_development/python/pelican/incremental_update")
+        repo = git.Repo(working_path)
     except git.InvalidGitRepositoryError:
         # repo is not initialized, initialize now
-        repo = git.Repo.init(".")
-        logger.debug("IUP: Initialize new repository")
+        repo = git.Repo.init(working_path)
+        logger.debug("Initialized new repository")
     create_gitignore()
     if not commits_present(repo):
         # there are no commits, quit now
-        logger.critical("IUP: There are no commits, please add commit changes and run again")
-        logger.critical("IUP: Exiting now")
+        logger.critical("There are no commits, please add commit changes and run again")
+        logger.critical("Exiting now")
         sys.exit()
     # get the current commit
-    tags_list = repo.tags
-    if not tags_list[0]:
-        # there are no tags, quit now
-        logger.critical("IUP: There are no tags, please add tags and run again")
-        logger.critical("IUP: Exiting now")
-        sys.exit()
+    # if working directory is dirty ... quit plugin
+    if not repo.is_dirty() and not repo.untracked_files:
+        tags_list = repo.tags
+        if not tags_list:
+            # there are no tags, quit now
+            logger.warning("There are no tags, output will generated as usual")
+            return
+        if output_path_name.find("{tag}") < 1:
+            logger.warning("Invalid plugin setting, output will be generated as usual")
+            return
 
-    pelican.output_path = pelican.settings.get("OUTPUT_PATH") + '/' + tags_list[-1].name
-    pelican.settings["OUTPUT_PATH"] = pelican.settings.get("OUTPUT_PATH") + '/' + tags_list[-1].name
-    print (pelican.settings.get("OUTPUT_PATH"))
-    logger.debug("IUP: Output will generated at ..")
+        output_path_name = output_path_name.replace("{tag}", tags_list[-1].name)
+        output_path = os.path.join(pelican.output_path, output_path_name)
+        pelican.output_path = output_path
+        pelican.settings["OUTPUT_PATH"] = output_path
+        logger.debug("Output will generated at %s", output_path)
+    else:
+        logger.warning("Repo is dirty or there are untracked files, output will be generated as usual")
 
 
 def create_gitignore():
@@ -44,7 +58,7 @@ def create_gitignore():
     """
     if not os.path.exists('.gitignore'):
         open('.gitignore', 'w').close()
-        logger.debug("IUP: .gitignore created")
+        logger.debug(".gitignore created")
     # add *.pyc and output to gitignore
     ignore_list = open(".gitignore").readlines()
     ouput = open(".gitignore", 'a')
@@ -52,7 +66,7 @@ def create_gitignore():
         if line not in ignore_list:
             ouput.write(line)
 
-    logger.debug("IUP: Updated .gitignore")
+    logger.debug("Updated .gitignore")
     ouput.close()
 
 
